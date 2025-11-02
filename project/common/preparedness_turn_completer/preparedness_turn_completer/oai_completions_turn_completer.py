@@ -54,7 +54,7 @@ class OpenAICompletionsTurnCompleter(TurnCompleter):
             # Fallback to o200k_base
             logger.warning(f"Model {model} not found in tiktoken, using o200k_base")
             self.encoding_name = "o200k_base"
-        self.n_ctx: int = get_model_context_window_length(model)
+        self.n_ctx: int = get_model_context_window_length(model.split("/")[-1])
 
     class Config(TurnCompleter.Config):
         """
@@ -106,7 +106,20 @@ class OpenAICompletionsTurnCompleter(TurnCompleter):
 
     @functools.cached_property
     def _client(self) -> openai.AsyncClient:
-        return openai.AsyncClient()
+        import os
+        client_kwargs = {}
+        if os.getenv("OPENAI_BASE_URL"):
+            client_kwargs["base_url"] = os.getenv("OPENAI_BASE_URL")
+        else:
+            logger.warning("🔧 No base_url specified, using default OpenAI API")
+            
+        if os.getenv("OPENAI_API_KEY"):
+            client_kwargs["api_key"] = os.getenv("OPENAI_API_KEY")
+        else:
+            logger.warning("🔧 No api_key specified")
+            
+        print(f"🔧 Final client_kwargs: {list(client_kwargs.items())}")
+        return openai.AsyncClient(**client_kwargs)
 
     def completion(
         self,

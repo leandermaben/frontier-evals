@@ -56,7 +56,7 @@ class OpenAIResponsesTurnCompleter(TurnCompleter):
             # Fallback to o200k_base
             logger.warning(f"Model {model} not found in tiktoken, using o200k_base")
             self.encoding_name = "o200k_base"
-        self.n_ctx: int = get_model_context_window_length(model)
+        self.n_ctx: int = get_model_context_window_length(model.split("/")[-1])
 
     class Config(TurnCompleter.Config):
         """
